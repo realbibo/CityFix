@@ -1,0 +1,31 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: department-service
+  config:
+    import: "optional:configserver:${CONFIG_URL:http://localhost:8888}"
+datasource:
+  url: ${MYSQL_URL:jdbc:mysql://localhost:3306/cityfix_departments?createDatabaseIfNotExist=true}
+  username: ${MYSQL_USER:root}
+  password: ${MYSQL_PASSWORD:root}
+jpa:
+  hibernate:
+    ddl-auto: update
+  open-in-view: false
+rabbitmq:
+  host: ${RABBIT_HOST:localhost}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
