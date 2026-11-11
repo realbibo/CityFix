@@ -1,0 +1,26 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: report-service
+  config:
+    import: "optional:configserver:${CONFIG_URL:http://localhost:8888}"
+data:
+  mongodb:
+    uri: ${MONGO_URI:mongodb://localhost:27017/cityfix_reports}
+rabbitmq:
+  host: ${RABBIT_HOST:localhost}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
