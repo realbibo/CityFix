@@ -1,0 +1,5 @@
+# Configuration spécifique à engagement-service (servie par le Config Server)
+info:
+  app:
+    name: engagement-service
+    project: CityFix

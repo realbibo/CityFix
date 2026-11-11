@@ -1,0 +1,5 @@
+# Configuration spécifique à intervention-service (servie par le Config Server)
+info:
+  app:
+    name: intervention-service
+    project: CityFix

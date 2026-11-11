@@ -1,0 +1,5 @@
+# Configuration spécifique à notification-service (servie par le Config Server)
+info:
+  app:
+    name: notification-service
+    project: CityFix

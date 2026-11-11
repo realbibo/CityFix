@@ -1,0 +1,5 @@
+# Configuration spécifique à report-service (servie par le Config Server)
+info:
+  app:
+    name: report-service
+    project: CityFix

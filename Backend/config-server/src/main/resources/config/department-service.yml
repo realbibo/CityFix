@@ -1,0 +1,5 @@
+# Configuration spécifique à department-service (servie par le Config Server)
+info:
+  app:
+    name: department-service
+    project: CityFix

@@ -1,0 +1,5 @@
+# Configuration spécifique à api-gateway (servie par le Config Server)
+info:
+  app:
+    name: api-gateway
+    project: CityFix

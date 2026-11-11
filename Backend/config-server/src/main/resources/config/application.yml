@@ -1,0 +1,27 @@
+# Configuration partagée par tous les microservices (servie par le Config Server)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+  retry:
+    configs:
+      default:
+        max-attempts: 3
+        wait-duration: 500ms
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+cityfix:
+  messaging:
+    exchange: cityfix.events
