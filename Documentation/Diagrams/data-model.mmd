@@ -1,0 +1,103 @@
+classDiagram
+    namespace Signalement_MongoDB {
+        class Report {
+            String id
+            String title
+            String description
+            Category category
+            List~String~ photos
+            GeoJsonPoint location
+            ReportStatus status
+            Priority priority
+            String citizenId
+            String departmentCode
+            Instant createdAt
+        }
+        class StatusHistory {
+            ReportStatus status
+            Instant changedAt
+            String changedBy
+            String comment
+        }
+    }
+    namespace Departement_MySQL {
+        class Department {
+            Long id
+            String code
+            String name
+            String email
+            String phone
+        }
+        class Zone {
+            Long id
+            String name
+            String district
+        }
+        class Agent {
+            Long id
+            String keycloakId
+            String fullName
+            boolean available
+            int activeJobs
+        }
+    }
+    namespace Intervention_PostgreSQL {
+        class Intervention {
+            Long id
+            String reportId
+            String departmentCode
+            Long agentId
+            InterventionStatus status
+            LocalDate plannedDate
+            Instant completedAt
+            String afterPhotoUrl
+        }
+        class InterventionLog {
+            Long id
+            String action
+            String actorId
+            Instant timestamp
+        }
+    }
+    namespace Engagement_PostgreSQL {
+        class Vote {
+            Long id
+            String reportId
+            String citizenId
+            Instant createdAt
+        }
+        class Comment {
+            Long id
+            String reportId
+            String citizenId
+            String content
+        }
+        class Feedback {
+            Long id
+            String reportId
+            Long interventionId
+            int rating
+            String comment
+        }
+    }
+    namespace ClassificationIA_MongoDB {
+        class Classification {
+            String id
+            String reportId
+            String category
+            double confidence
+            String priority
+            String modelVersion
+            boolean needsReview
+        }
+        class ModelVersion {
+            String version
+            String type
+            double accuracy
+        }
+    }
+    Report "1" *-- "many" StatusHistory
+    Department "1" -- "many" Zone
+    Department "1" -- "many" Agent
+    Intervention "1" -- "many" InterventionLog
+    Classification "many" --> "1" ModelVersion

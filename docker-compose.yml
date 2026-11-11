@@ -1,0 +1,119 @@
+# Infrastructure CityFix.
+#   docker compose up -d                 -> bases de données, RabbitMQ, Keycloak, MailHog
+#   docker compose --profile apps up -d  -> + tous les microservices (après "mvn package" dans chaque projet)
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: cityfix_departments
+    ports: ["3306:3306"]
+    volumes: [mysql-data:/var/lib/mysql]
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5432:5432"]
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: [mongo-data:/data/db]
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    ports: ["5672:5672", "15672:15672"]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+    ports: ["8180:8080"]
+
+  mailhog:
+    image: mailhog/mailhog
+    ports: ["1025:1025", "8025:8025"]
+
+  # ---------- microservices (profil "apps") ----------
+  eureka-server:
+    profiles: [apps]
+    build: ./Backend/eureka-server
+    ports: ["8761:8761"]
+
+  config-server:
+    profiles: [apps]
+    build: ./Backend/config-server
+    ports: ["8888:8888"]
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on: [eureka-server]
+
+  api-gateway:
+    profiles: [apps]
+    build: ./Backend/api-gateway
+    ports: ["8080:8080"]
+    environment: &svc-env
+      EUREKA_URL: http://eureka-server:8761/eureka
+      CONFIG_URL: http://config-server:8888
+      RABBIT_HOST: rabbitmq
+      MONGO_URI: mongodb://mongo:27017/cityfix
+      MYSQL_URL: jdbc:mysql://mysql:3306/cityfix_departments?createDatabaseIfNotExist=true
+      MAIL_HOST: mailhog
+    depends_on: [config-server]
+
+  report-service:
+    profiles: [apps]
+    build: ./Backend/report-service
+    environment:
+      <<: *svc-env
+      MONGO_URI: mongodb://mongo:27017/cityfix_reports
+    depends_on: [config-server, mongo, rabbitmq]
+
+  department-service:
+    profiles: [apps]
+    build: ./Backend/department-service
+    environment: *svc-env
+    depends_on: [config-server, mysql, rabbitmq]
+
+  intervention-service:
+    profiles: [apps]
+    build: ./Backend/intervention-service
+    environment:
+      <<: *svc-env
+      PG_URL: jdbc:postgresql://postgres:5432/cityfix_interventions
+    depends_on: [config-server, postgres, rabbitmq]
+
+  engagement-service:
+    profiles: [apps]
+    build: ./Backend/engagement-service
+    environment:
+      <<: *svc-env
+      PG_URL: jdbc:postgresql://postgres:5432/cityfix_engagement
+    depends_on: [config-server, postgres, rabbitmq]
+
+  ai-classification-service:
+    profiles: [apps]
+    build: ./Backend/ai-classification-service
+    environment:
+      EUREKA_URL: http://eureka-server:8761/eureka
+    depends_on: [eureka-server]
+
+  notification-service:
+    profiles: [apps]
+    build: ./Backend/notification-service
+    environment:
+      <<: *svc-env
+      MONGO_URI: mongodb://mongo:27017/cityfix_notifications
+    depends_on: [config-server, mongo, rabbitmq]
+
+volumes:
+  mysql-data:
+  postgres-data:
+  mongo-data:

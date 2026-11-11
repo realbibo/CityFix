@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    actor C as Citoyen
+    participant FE as Angular
+    participant GW as API Gateway
+    participant RS as Signalement
+    participant MQ as RabbitMQ
+    participant AI as Classification IA
+    participant IS as Intervention
+    participant DS as Département & Agent
+    participant NS as Notification
+    participant ES as Engagement
+
+    C->>FE: Photo + position GPS
+    FE->>GW: POST /api/reports (JWT)
+    GW->>RS: POST /api/reports
+    RS-->>FE: 201 Created (id de suivi)
+    RS-)MQ: ReportCreated
+    MQ-)AI: ReportCreated
+    MQ-)NS: ReportCreated
+    AI-)MQ: ReportClassified (catégorie, priorité)
+    MQ-)RS: ReportClassified
+    MQ-)IS: ReportClassified
+    IS->>RS: GET /api/reports/{id} (OpenFeign)
+    IS->>DS: GET /api/agents/available (OpenFeign + circuit breaker)
+    alt Département indisponible
+        IS-->>IS: Fallback : intervention PLANNED, affectation relancée
+    end
+    IS-)MQ: InterventionStatusChanged
+    MQ-)RS: mise à jour du statut
+    MQ-)NS: notification au citoyen
+    IS-)MQ: InterventionCompleted
+    MQ-)ES: ouverture de la notation
+    C->>FE: Note la réparation
+    FE->>GW: POST /api/feedbacks
+    GW->>ES: POST /api/feedbacks
+    ES->>RS: GET /api/reports/{id} (OpenFeign)
+    ES-->>FE: 201 Created
